@@ -6,6 +6,7 @@ import io.kotest.assertions.show.show
 import io.kotest.neverNullMatcher
 import io.kotest.should
 import io.kotest.shouldNot
+import kotlin.text.RegexOption.IGNORE_CASE
 
 fun String?.shouldContainOnlyDigits() = this should containOnlyDigits()
 fun String?.shouldNotContainOnlyDigits() = this shouldNot containOnlyDigits()
@@ -371,4 +372,64 @@ fun beFalsy(): Matcher<String?> = object : Matcher<String?> {
          { """${value.show()} should not be equal ignoring case one of values: $falsyValues""" }
      )
    }
+}
+
+/**
+ * Asserts that this String is a valid UUID
+ * 
+ * Opposite of [shouldNotBeUUID]
+ * 
+ * Verifies that this string is a valid UUID as per RFC4122. All versions (v1 through v5) are matched. A special
+ * attention is necessary for the NIL UUID (an UUID with all zeros), which is considered a valid UUID.
+ * 
+ * ```
+ * "123e4567-e89b-12d3-a456-426655440000".shouldBeUUID()  // Assertion passes
+ * "123e4567e89b12d3a456426655440000".shouldBeUUID()      // Assertion fails
+ * "00000000-0000-0000-0000-000000000000".shouldBeUUID()  // Assertion passes
+ *
+ * ```
+ * 
+ * @see [RFC4122] https://tools.ietf.org/html/rfc4122
+ */
+fun String.shouldBeUUID() = this should beUUID()
+
+/**
+ * Asserts that this String is NOT a valid UUID
+ *
+ * Opposite of [shouldBeUUID]
+ *
+ * Verifies that this string is a NOT valid UUID as per RFC4122. All versions (v1 through v5) are matched. A special
+ * attention is necessary for the NIL UUID (an UUID with all zeros), which is considered a valid UUID.
+ *
+ * ```
+ * "123e4567-e89b-12d3-a456-426655440000".shouldNotBeUUID()  // Assertion fails
+ * "123e4567e89b12d3a456426655440000".shouldNotBeUUID()      // Assertion passes
+ * "00000000-0000-0000-0000-000000000000".shouldNotBeUUID()  // Assertion fails
+ *
+ * ```
+ *
+ * @see [RFC4122] https://tools.ietf.org/html/rfc4122
+ */
+fun String.shouldNotBeUUID() = this shouldNot beUUID()
+
+
+/**
+ * Matcher that verifies if a String is an UUID
+ *
+ *
+ * Verifies that a string is a valid UUID as per RFC4122. All versions (v1 through v5) are matched. A special
+ * attention is necessary for the NIL UUID (an UUID with all zeros), which is considered a valid UUID.
+ *
+ *
+ * @see [RFC4122] https://tools.ietf.org/html/rfc4122
+ * @see shouldBeUUID
+ * @see shouldNotBeUUID
+ */
+fun beUUID() = object : Matcher<String> {
+  override fun test(value: String) = MatcherResult(
+    value.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}".toRegex(IGNORE_CASE)),
+    "String $value is not an UUID, but should be",
+    "String $value is an UUID, but shouldn't be"
+  )
+  
 }
